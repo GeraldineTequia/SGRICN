@@ -29,9 +29,9 @@ interface Formulario {
   familiasAfectadas: string;
   personasAfectadas: string;
 
-  heridos: string;
-  fallecidos: string;
-  desaparecidos: string;
+  personasHeridas: string;
+  personasFallecidas: string;
+  personasDesaparecidas: string;
 
   niños: string;
   adultos: string;
@@ -50,9 +50,9 @@ const formularioInicial: Formulario = {
   familiasAfectadas: "0",
   personasAfectadas: "0",
 
-  heridos: "0",
-  fallecidos: "0",
-  desaparecidos: "0",
+  personasHeridas: "0",
+  personasFallecidas: "0",
+  personasDesaparecidas: "0",
 
   niños: "0",
   adultos: "0",
@@ -91,9 +91,9 @@ export default function PoblacionForm({
       familiasAfectadas: String(poblacion.familiasAfectadas ?? 0),
       personasAfectadas: String(poblacion.personasAfectadas ?? 0),
 
-      heridos: String(poblacion.heridos ?? 0),
-      fallecidos: String(poblacion.fallecidos ?? 0),
-      desaparecidos: String(poblacion.desaparecidos ?? 0),
+      personasHeridas: String(poblacion.personasHeridas ?? 0),
+      personasFallecidas: String(poblacion.personasFallecidas ?? 0),
+      personasDesaparecidas: String(poblacion.personasDesaparecidas ?? 0),
 
       niños: String(poblacion.niños ?? 0),
       adultos: String(poblacion.adultos ?? 0),
@@ -175,9 +175,9 @@ export default function PoblacionForm({
         familiasAfectadas: convertirNumero(formulario.familiasAfectadas),
         personasAfectadas: convertirNumero(formulario.personasAfectadas),
 
-        heridos: convertirNumero(formulario.heridos),
-        fallecidos: convertirNumero(formulario.fallecidos),
-        desaparecidos: convertirNumero(formulario.desaparecidos),
+        personasHeridas: convertirNumero(formulario.personasHeridas),
+        personasFallecidas: convertirNumero(formulario.personasFallecidas),
+        personasDesaparecidas: convertirNumero(formulario.personasDesaparecidas),
 
         niños: convertirNumero(formulario.niños),
         adultos: convertirNumero(formulario.adultos),
@@ -299,22 +299,22 @@ export default function PoblacionForm({
             onChange={(value) => cambiarCampo("personasAfectadas", value)}
           />
 
-          <NumberField
+         <NumberField
             label="Heridos"
-            value={formulario.heridos}
-            onChange={(value) => cambiarCampo("heridos", value)}
+            value={formulario.personasHeridas}
+            onChange={(value) => cambiarCampo("personasHeridas", value)}
           />
-
+          
           <NumberField
             label="Fallecidos"
-            value={formulario.fallecidos}
-            onChange={(value) => cambiarCampo("fallecidos", value)}
+            value={formulario.personasFallecidas}
+            onChange={(value) => cambiarCampo("personasFallecidas", value)}
           />
-
+          
           <NumberField
             label="Desaparecidos"
-            value={formulario.desaparecidos}
-            onChange={(value) => cambiarCampo("desaparecidos", value)}
+            value={formulario.personasDesaparecidas}
+            onChange={(value) => cambiarCampo("personasDesaparecidas", value)}
           />
         </div>
       </Section>
