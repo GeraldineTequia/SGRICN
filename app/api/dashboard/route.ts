@@ -137,15 +137,18 @@ export async function GET() {
 
     const zonasAfectadas = zonas.length;
 
-    const personasAfectadas = poblacion.reduce((total, registro) => {
-      const cantidad =
-        Number(
-          registro.personasAfectadas ??
-            registro.cantidadPersonas ??
-            registro.numeroPersonas ??
-            registro.personas ??
-            0
-        ) || 0;
+    const poblacionAfectada = poblacion.reduce((total, registro) => {
+    const cantidad =
+      Number(
+        registro.personasAfectadas ??
+          registro.cantidadPersonas ??
+          registro.numeroPersonas ??
+          registro.personas ??
+          0
+      ) || 0;
+
+  return total + cantidad;
+}, 0);
 
       return total + cantidad;
     }, 0);
@@ -271,20 +274,19 @@ export async function GET() {
     // =========================================================
 
     return NextResponse.json({
-      success: true,
-
-      data: {
-        stats: {
-          emergenciasActivas,
-          zonasAfectadas,
-          personasAfectadas,
-          necesidadesCriticas,
-          funcionariosActivos,
-        },
-
-        alertas: alertasFinales,
+    success: true,
+    data: {
+      stats: {
+        emergenciasActivas,
+        zonasAfectadas,
+        poblacionAfectada,
+        necesidadesCriticas,
+        funcionariosActivos,
       },
-    });
+  
+      alertas: alertasFinales,
+    },
+  });
   } catch (error) {
     console.error("Error en GET /api/dashboard:", error);
 
