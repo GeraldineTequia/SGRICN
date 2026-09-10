@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { useSearchParams } from "next/navigation";
 
@@ -18,7 +18,7 @@ const bancos = [
   "Scotiabank Colpatria",
 ];
 
-export default function ResultadoDonacionPage() {
+function ResultadoDonacionContenido() {
   const searchParams = useSearchParams();
 
   const donacionId = searchParams.get("donacionId");
@@ -26,21 +26,14 @@ export default function ResultadoDonacionPage() {
   const [donacion, setDonacion] = useState<Donacion | null>(null);
 
   const [banco, setBanco] = useState("");
-
   const [tipoDocumento, setTipoDocumento] = useState("CC");
-
   const [numeroDocumento, setNumeroDocumento] = useState("");
-
   const [nombre, setNombre] = useState("");
-
   const [correo, setCorreo] = useState("");
-
   const [telefono, setTelefono] = useState("");
 
   const [loading, setLoading] = useState(true);
-
   const [procesando, setProcesando] = useState(false);
-
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -57,7 +50,9 @@ export default function ResultadoDonacionPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "No se pudo obtener la donación.");
+          throw new Error(
+            data.message || "No se pudo obtener la donación."
+          );
         }
 
         const encontrada = (data.data || []).find(
@@ -83,7 +78,9 @@ export default function ResultadoDonacionPage() {
     cargarDonacion();
   }, [donacionId]);
 
-  async function procesarPago(resultado: "aprobada" | "rechazada") {
+  async function procesarPago(
+    resultado: "aprobada" | "rechazada"
+  ) {
     if (!donacionId) {
       return;
     }
@@ -106,12 +103,18 @@ export default function ResultadoDonacionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "No se pudo procesar el pago.");
+        throw new Error(
+          data.message || "No se pudo procesar el pago."
+        );
       }
 
       setDonacion(data.data);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Ocurrió un error.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error."
+      );
     } finally {
       setProcesando(false);
     }
@@ -160,7 +163,8 @@ export default function ResultadoDonacionPage() {
   }).format(donacion.monto);
 
   const pagoFinalizado =
-    donacion.estado === "aprobada" || donacion.estado === "rechazada";
+    donacion.estado === "aprobada" ||
+    donacion.estado === "rechazada";
 
   return (
     <DashboardLayout>
@@ -279,7 +283,9 @@ export default function ResultadoDonacionPage() {
 
                   <select
                     value={banco}
-                    onChange={(event) => setBanco(event.target.value)}
+                    onChange={(event) =>
+                      setBanco(event.target.value)
+                    }
                     style={{
                       width: "100%",
                       padding: "12px",
@@ -287,7 +293,9 @@ export default function ResultadoDonacionPage() {
                       borderRadius: "8px",
                     }}
                   >
-                    <option value="">Selecciona tu banco</option>
+                    <option value="">
+                      Selecciona tu banco
+                    </option>
 
                     {bancos.map((item) => (
                       <option key={item} value={item}>
@@ -317,7 +325,9 @@ export default function ResultadoDonacionPage() {
 
                     <select
                       value={tipoDocumento}
-                      onChange={(event) => setTipoDocumento(event.target.value)}
+                      onChange={(event) =>
+                        setTipoDocumento(event.target.value)
+                      }
                       style={{
                         width: "100%",
                         padding: "12px",
@@ -326,9 +336,7 @@ export default function ResultadoDonacionPage() {
                       }}
                     >
                       <option value="CC">CC</option>
-
                       <option value="CE">CE</option>
-
                       <option value="NIT">NIT</option>
                     </select>
                   </div>
@@ -373,7 +381,9 @@ export default function ResultadoDonacionPage() {
 
                   <input
                     value={nombre}
-                    onChange={(event) => setNombre(event.target.value)}
+                    onChange={(event) =>
+                      setNombre(event.target.value)
+                    }
                     placeholder="Nombre del titular"
                     style={{
                       width: "100%",
@@ -398,7 +408,9 @@ export default function ResultadoDonacionPage() {
                   <input
                     type="email"
                     value={correo}
-                    onChange={(event) => setCorreo(event.target.value)}
+                    onChange={(event) =>
+                      setCorreo(event.target.value)
+                    }
                     placeholder="correo@ejemplo.com"
                     style={{
                       width: "100%",
@@ -422,7 +434,9 @@ export default function ResultadoDonacionPage() {
 
                   <input
                     value={telefono}
-                    onChange={(event) => setTelefono(event.target.value)}
+                    onChange={(event) =>
+                      setTelefono(event.target.value)
+                    }
                     placeholder="3001234567"
                     style={{
                       width: "100%",
@@ -462,8 +476,8 @@ export default function ResultadoDonacionPage() {
                       margin: "6px 0 0",
                     }}
                   >
-                    No introduzcas información bancaria real. Este proceso es
-                    exclusivamente académico.
+                    No introduzcas información bancaria real. Este
+                    proceso es exclusivamente académico.
                   </p>
                 </div>
 
@@ -512,79 +526,86 @@ export default function ResultadoDonacionPage() {
                 🔒 Conexión segura · Simulador académico
               </div>
 
-              {/* Panel de simulación */}
-              {banco && numeroDocumento && nombre && correo && telefono && (
-                <div
-                  style={{
-                    marginTop: "25px",
-                    border: "2px solid #003893",
-                    borderRadius: "12px",
-                    padding: "22px",
-                    background: "#eef5ff",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 8px",
-                      color: "#00245f",
-                    }}
-                  >
-                    Simulación de autorización
-                  </h3>
-
-                  <p
-                    style={{
-                      color: "#5f6b7a",
-                      fontSize: "14px",
-                    }}
-                  >
-                    Selecciona qué resultado quieres simular para esta
-                    transacción.
-                  </p>
-
+              {banco &&
+                numeroDocumento &&
+                nombre &&
+                correo &&
+                telefono && (
                   <div
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "12px",
+                      marginTop: "25px",
+                      border: "2px solid #003893",
+                      borderRadius: "12px",
+                      padding: "22px",
+                      background: "#eef5ff",
                     }}
                   >
-                    <button
-                      type="button"
-                      disabled={procesando}
-                      onClick={() => procesarPago("aprobada")}
+                    <h3
                       style={{
-                        padding: "14px",
-                        border: "none",
-                        borderRadius: "8px",
-                        background: "#198754",
-                        color: "#ffffff",
-                        fontWeight: 700,
-                        cursor: "pointer",
+                        margin: "0 0 8px",
+                        color: "#00245f",
                       }}
                     >
-                      ✓ Aprobar pago
-                    </button>
+                      Simulación de autorización
+                    </h3>
 
-                    <button
-                      type="button"
-                      disabled={procesando}
-                      onClick={() => procesarPago("rechazada")}
+                    <p
                       style={{
-                        padding: "14px",
-                        border: "none",
-                        borderRadius: "8px",
-                        background: "#ce1126",
-                        color: "#ffffff",
-                        fontWeight: 700,
-                        cursor: "pointer",
+                        color: "#5f6b7a",
+                        fontSize: "14px",
                       }}
                     >
-                      ✕ Rechazar pago
-                    </button>
+                      Selecciona qué resultado quieres simular para
+                      esta transacción.
+                    </p>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "12px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        disabled={procesando}
+                        onClick={() =>
+                          procesarPago("aprobada")
+                        }
+                        style={{
+                          padding: "14px",
+                          border: "none",
+                          borderRadius: "8px",
+                          background: "#198754",
+                          color: "#ffffff",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✓ Aprobar pago
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={procesando}
+                        onClick={() =>
+                          procesarPago("rechazada")
+                        }
+                        style={{
+                          padding: "14px",
+                          border: "none",
+                          borderRadius: "8px",
+                          background: "#ce1126",
+                          color: "#ffffff",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✕ Rechazar pago
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         ) : (
@@ -609,7 +630,9 @@ export default function ResultadoDonacionPage() {
                 justifyContent: "center",
                 fontSize: "40px",
                 background:
-                  donacion.estado === "aprobada" ? "#e8f7ee" : "#fdecec",
+                  donacion.estado === "aprobada"
+                    ? "#e8f7ee"
+                    : "#fdecec",
               }}
             >
               {donacion.estado === "aprobada" ? "✓" : "✕"}
@@ -617,7 +640,10 @@ export default function ResultadoDonacionPage() {
 
             <h1
               style={{
-                color: donacion.estado === "aprobada" ? "#198754" : "#ce1126",
+                color:
+                  donacion.estado === "aprobada"
+                    ? "#198754"
+                    : "#ce1126",
                 marginBottom: "10px",
               }}
             >
@@ -648,7 +674,8 @@ export default function ResultadoDonacionPage() {
               }}
             >
               <div>
-                <strong>Referencia:</strong> {donacion.referencia}
+                <strong>Referencia:</strong>{" "}
+                {donacion.referencia}
               </div>
 
               <div
@@ -656,7 +683,8 @@ export default function ResultadoDonacionPage() {
                   marginTop: "8px",
                 }}
               >
-                <strong>Transacción:</strong> {donacion.transaccionId}
+                <strong>Transacción:</strong>{" "}
+                {donacion.transaccionId}
               </div>
 
               <div
@@ -672,14 +700,18 @@ export default function ResultadoDonacionPage() {
                   marginTop: "8px",
                 }}
               >
-                <strong>Método:</strong> {donacion.metodoPago}
+                <strong>Método:</strong>{" "}
+                {donacion.metodoPago}
               </div>
 
               <div
                 style={{
                   marginTop: "8px",
                   fontWeight: 700,
-                  color: donacion.estado === "aprobada" ? "#198754" : "#ce1126",
+                  color:
+                    donacion.estado === "aprobada"
+                      ? "#198754"
+                      : "#ce1126",
                 }}
               >
                 Estado: {donacion.estado.toUpperCase()}
@@ -688,7 +720,9 @@ export default function ResultadoDonacionPage() {
 
             <button
               type="button"
-              onClick={() => (window.location.href = "/donaciones")}
+              onClick={() =>
+                (window.location.href = "/donaciones")
+              }
               style={{
                 marginTop: "25px",
                 padding: "13px 25px",
@@ -706,5 +740,26 @@ export default function ResultadoDonacionPage() {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function ResultadoDonacionPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div
+            style={{
+              padding: "50px",
+              textAlign: "center",
+            }}
+          >
+            Cargando simulador PSE...
+          </div>
+        </DashboardLayout>
+      }
+    >
+      <ResultadoDonacionContenido />
+    </Suspense>
   );
 }
