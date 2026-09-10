@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type * as L from "leaflet";
+import type * as LeafletTypes from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 let Leaflet: typeof import("leaflet") | null = null;
@@ -34,7 +34,7 @@ interface EmergencyMapProps {
   height?: string;
 }
 
-const DEFAULT_CENTER: L.LatLngExpression = [4.5709, -74.2973];
+const DEFAULT_CENTER: LeafletTypes.LatLngExpression = [4.5709, -74.2973];
 const DEFAULT_ZOOM = 6;
 
 /* =========================================================
@@ -78,7 +78,7 @@ function formatearNivel(nivel: string): string {
    ICONOS DEL MAPA
 ========================================================= */
 
-function crearIcono(tipo: PuntoMapa["tipo"]): L.DivIcon {
+function crearIcono(tipo: PuntoMapa["tipo"]): LeafletTypes.DivIcon {
   if (!Leaflet) {
     throw new Error("Leaflet todavía no está cargado.");
   }
@@ -415,143 +415,242 @@ export default function EmergencyMap({
 }: EmergencyMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<LeafletTypes.Map | null>(null);
 
-  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const markersLayerRef =
+    useRef<LeafletTypes.LayerGroup | null>(null);
+
   const [mapReady, setMapReady] = useState(false);
 
   /* =======================================================
      INICIALIZAR LEAFLET
   ======================================================= */
 
-useEffect(() => {
-  if (!mapContainerRef.current) {
-    return;
-  }
+  useEffect(() => {
+    let cancelado = false;
 
-  if (mapRef.current) {
-    return;
-  }
+    async function inicializarMapa() {
+      if (!mapContainerRef.current) {
+        return;
+      }
 
-  const map = L.map(mapContainerRef.current, {
-    center: DEFAULT_CENTER,
-    zoom: DEFAULT_ZOOM,
-    zoomControl: true,
-    scrollWheelZoom: true,
-  });
+      if (mapRef.current) {
+        return;
+      }
 
-  mapRef.current = map;
+      try {
+        /*
+         * Cargar Leaflet únicamente en el navegador.
+         * Esto evita problemas durante el build de Vercel.
+         */
+        if (!Leaflet) {
+          Leaflet = await import("leaflet");
+        }
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
-    maxZoom: 19,
-  }).addTo(map);
+        if (cancelado || !mapContainerRef.current) {
+          return;
+        }
 
-  markersLayerRef.current = L.layerGroup().addTo(map);
+        const mapa = Leaflet.map(mapContainerRef.current, {
+          center: DEFAULT_CENTER,
+          zoom: DEFAULT_ZOOM,
+          zoomControl: true,
+          scrollWheelZoom: true,
+        });
 
-  setMapReady(true);
+        mapRef.current = mapa;
 
-  const resizeTimer = window.setTimeout(() => {
-    map.invalidateSize();
-  }, 150);
+        Leaflet.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+            maxZoom: 19,
+          }
+        ).addTo(mapa);
 
-  return () => {
-    window.clearTimeout(resizeTimer);
+        markersLayerRef.current =
+          Leaflet.layerGroup().addTo(mapa);
 
-    markersLayerRef.current?.clearLayers();
-    markersLayerRef.current = null;
+        /*
+         * Muy importante:
+         * avisamos que el mapa ya está completamente listo.
+         *
+         * Esto hace que el segundo useEffect se ejecute
+         * nuevamente y pinte los marcadores.
+         */
+        setMapReady(true);
 
-    map.remove();
-    mapRef.current = null;
+        const resizeTimer = window.setTimeout(() => {
+          mapa.invalidateSize();
+        }, 150);
 
-    setMapReady(false);
-  };
-}, []);
+        /*
+         * Limpiar el temporizador si el componente
+         * se desmonta antes de ejecutarse.
+         */
+        if (cancelado) {
+          window.clearTimeout(resizeTimer);
+        }
+      } catch (error) {
+        console.error(
+          "Error inicializando Leaflet:",
+          error
+        );
+      }
+    }
+
+    inicializarMapa();
+
+    return () => {
+      cancelado = true;
+
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+
+      markersLayerRef.current = null;
+
+      setMapReady(false);
+    };
+  }, []);
 
   /* =======================================================
      ACTUALIZAR MARCADORES
   ======================================================= */
 
-useEffect(() => {
-  const map = mapRef.current;
-  const markersLayer = markersLayerRef.current;
+  useEffect(() => {
+    const mapa = mapRef.current;
+    const markersLayer = markersLayerRef.current;
 
-  if (!mapReady || !map || !markersLayer) {
-    return;
-  }
+    /*
+     * Si Leaflet todavía no terminó de inicializarse,
+     * esperamos a que mapReady cambie a true.
+     */
+    if (!mapReady || !mapa || !markersLayer || !Leaflet) {
+      return;
+    }
 
-  markersLayer.clearLayers();
+    markersLayer.clearLayers();
 
-  const puntos = [...catastrofes, ...zonas, ...centros];
+    const puntos = [
+      ...catastrofes,
+      ...zonas,
+      ...centros,
+    ];
 
-  const puntosValidos = obtenerPuntosValidos(puntos);
+    const puntosValidos =
+      obtenerPuntosValidos(puntos);
 
-  if (puntosValidos.length === 0) {
-    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    /*
+     * No existen puntos válidos.
+     */
+    if (puntosValidos.length === 0) {
+      mapa.setView(
+        DEFAULT_CENTER,
+        DEFAULT_ZOOM
+      );
 
+      const resizeTimer = window.setTimeout(() => {
+        mapa.invalidateSize();
+      }, 100);
+
+      return () => {
+        window.clearTimeout(resizeTimer);
+      };
+    }
+
+    /*
+     * Crear límites para mostrar todos los
+     * puntos automáticamente.
+     */
+    const bounds = Leaflet.latLngBounds([]);
+
+    puntosValidos.forEach(
+      ({ punto, latitud, longitud }) => {
+        const marker = Leaflet!.marker(
+          [latitud, longitud],
+          {
+            icon: crearIcono(punto.tipo),
+            title: punto.titulo,
+          }
+        );
+
+        marker.bindPopup(
+          crearPopup(punto),
+          {
+            maxWidth: 360,
+            minWidth: 260,
+            closeButton: true,
+            autoPan: true,
+          }
+        );
+
+        marker.addTo(markersLayer);
+
+        bounds.extend([
+          latitud,
+          longitud,
+        ]);
+      }
+    );
+
+    /*
+     * Si solamente hay un punto,
+     * centramos el mapa directamente.
+     */
+    if (puntosValidos.length === 1) {
+      const punto = puntosValidos[0];
+
+      mapa.setView(
+        [
+          punto.latitud,
+          punto.longitud,
+        ],
+        12
+      );
+    } else {
+      /*
+       * Si hay varios puntos,
+       * ajustamos el mapa para mostrarlos todos.
+       */
+      mapa.fitBounds(bounds, {
+        padding: [40, 40],
+        maxZoom: 13,
+      });
+    }
+
+    /*
+     * Leaflet necesita recalcular su tamaño
+     * después de actualizar el contenedor.
+     */
     const resizeTimer = window.setTimeout(() => {
-      map.invalidateSize();
+      mapa.invalidateSize();
     }, 100);
 
     return () => {
       window.clearTimeout(resizeTimer);
     };
-  }
+  }, [
+    mapReady,
+    catastrofes,
+    zonas,
+    centros,
+  ]);
 
-  const bounds = L.latLngBounds([]);
-
-  puntosValidos.forEach(({ punto, latitud, longitud }) => {
-    const marker = L.marker([latitud, longitud], {
-      icon: crearIcono(punto.tipo),
-      title: punto.titulo,
-    });
-
-    marker.bindPopup(crearPopup(punto), {
-      maxWidth: 360,
-      minWidth: 260,
-      closeButton: true,
-      autoPan: true,
-    });
-
-    marker.addTo(markersLayer);
-
-    bounds.extend([latitud, longitud]);
-  });
-
-  if (puntosValidos.length === 1) {
-    const punto = puntosValidos[0];
-
-    map.setView([punto.latitud, punto.longitud], 12);
-  } else {
-    map.fitBounds(bounds, {
-      padding: [40, 40],
-      maxZoom: 13,
-    });
-  }
-
-  const resizeTimer = window.setTimeout(() => {
-    map.invalidateSize();
-  }, 100);
-
-  return () => {
-    window.clearTimeout(resizeTimer);
-  };
-}, [mapReady, catastrofes, zonas, centros]);
-
-
-  /* =======================================================
+  /* =========================================================
      CONTADOR
-  ======================================================= */
+  ========================================================= */
 
   const totalPuntos =
     catastrofes.length +
     zonas.length +
     centros.length;
 
-  /* =======================================================
+  /* =========================================================
      RENDER
-  ======================================================= */
+  ========================================================= */
 
   return (
     <div
