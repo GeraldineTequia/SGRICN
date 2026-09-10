@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -418,215 +418,77 @@ export default function EmergencyMap({
   const mapRef = useRef<L.Map | null>(null);
 
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   /* =======================================================
      INICIALIZAR LEAFLET
   ======================================================= */
 
-  useEffect(() => {
-    let cancelado = false;
+useEffect(() => {
+  if (!mapContainerRef.current) {
+    return;
+  }
 
-    async function inicializarMapa() {
-      if (!mapContainerRef.current || mapRef.current) {
-        return;
-      }
+  if (mapRef.current) {
+    return;
+  }
 
-      try {
-        /*
-         * IMPORTANTE:
-         * Leaflet se carga solamente en el navegador.
-         * Esto evita el error de Vercel/Next.js durante el build.
-         */
+  const map = L.map(mapContainerRef.current, {
+    center: DEFAULT_CENTER,
+    zoom: DEFAULT_ZOOM,
+    zoomControl: true,
+    scrollWheelZoom: true,
+  });
 
-        const moduloLeaflet = await import("leaflet");
+  mapRef.current = map;
 
-        if (
-          cancelado ||
-          !mapContainerRef.current ||
-          mapRef.current
-        ) {
-          return;
-        }
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
 
-        Leaflet = moduloLeaflet;
+  markersLayerRef.current = L.layerGroup().addTo(map);
 
-        const map = Leaflet.map(mapContainerRef.current, {
-          center: DEFAULT_CENTER,
-          zoom: DEFAULT_ZOOM,
-          zoomControl: true,
-          scrollWheelZoom: true,
-        });
+  setMapReady(true);
 
-        mapRef.current = map;
+  const resizeTimer = window.setTimeout(() => {
+    map.invalidateSize();
+  }, 150);
 
-        Leaflet.tileLayer(
-          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
-            maxZoom: 19,
-          }
-        ).addTo(map);
+  return () => {
+    window.clearTimeout(resizeTimer);
 
-        markersLayerRef.current =
-          Leaflet.layerGroup().addTo(map);
+    markersLayerRef.current?.clearLayers();
+    markersLayerRef.current = null;
 
-        const resizeTimer = window.setTimeout(() => {
-          map.invalidateSize();
-        }, 150);
+    map.remove();
+    mapRef.current = null;
 
-        /*
-         * Limpieza cuando el componente se desmonta.
-         */
-
-        if (cancelado) {
-          window.clearTimeout(resizeTimer);
-
-          markersLayerRef.current?.clearLayers();
-          markersLayerRef.current = null;
-
-          map.remove();
-          mapRef.current = null;
-
-          return;
-        }
-      } catch (error) {
-        console.error(
-          "Error al inicializar el mapa de Leaflet:",
-          error
-        );
-      }
-    }
-
-    inicializarMapa();
-
-    return () => {
-      cancelado = true;
-
-      if (mapRef.current) {
-        markersLayerRef.current?.clearLayers();
-        markersLayerRef.current = null;
-
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-
-      Leaflet = null;
-    };
-  }, []);
+    setMapReady(false);
+  };
+}, []);
 
   /* =======================================================
      ACTUALIZAR MARCADORES
   ======================================================= */
 
-  useEffect(() => {
-    const map = mapRef.current;
+useEffect(() => {
+  const map = mapRef.current;
+  const markersLayer = markersLayerRef.current;
 
-    const markersLayer = markersLayerRef.current;
+  if (!mapReady || !map || !markersLayer) {
+    return;
+  }
 
-    if (!map || !markersLayer || !Leaflet) {
-      return;
-    }
+  markersLayer.clearLayers();
 
-    markersLayer.clearLayers();
+  const puntos = [...catastrofes, ...zonas, ...centros];
 
-    const puntos = [
-      ...catastrofes,
-      ...zonas,
-      ...centros,
-    ];
+  const puntosValidos = obtenerPuntosValidos(puntos);
 
-    const puntosValidos = obtenerPuntosValidos(puntos);
-
-    /* -------------------------------------------------------
-       SIN PUNTOS
-    ------------------------------------------------------- */
-
-    if (puntosValidos.length === 0) {
-      map.setView(
-        DEFAULT_CENTER,
-        DEFAULT_ZOOM
-      );
-
-      const emptyTimer = window.setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
-
-      return () => {
-        window.clearTimeout(emptyTimer);
-      };
-    }
-
-    /* -------------------------------------------------------
-       CREAR BOUNDS
-    ------------------------------------------------------- */
-
-    const bounds = Leaflet.latLngBounds([]);
-
-    /* -------------------------------------------------------
-       CREAR MARCADORES
-    ------------------------------------------------------- */
-
-    puntosValidos.forEach(
-      ({ punto, latitud, longitud }) => {
-        if (!Leaflet) {
-          return;
-        }
-
-        const marker = Leaflet.marker(
-          [latitud, longitud],
-          {
-            icon: crearIcono(punto.tipo),
-            title: punto.titulo,
-          }
-        );
-
-        marker.bindPopup(
-          crearPopup(punto),
-          {
-            maxWidth: 360,
-            minWidth: 260,
-            closeButton: true,
-            autoPan: true,
-          }
-        );
-
-        marker.addTo(markersLayer);
-
-        bounds.extend([
-          latitud,
-          longitud,
-        ]);
-      }
-    );
-
-    /* -------------------------------------------------------
-       AJUSTAR VISTA
-    ------------------------------------------------------- */
-
-    if (puntosValidos.length === 1) {
-      const punto = puntosValidos[0];
-
-      map.setView(
-        [
-          punto.latitud,
-          punto.longitud,
-        ],
-        12
-      );
-    } else {
-      map.fitBounds(
-        bounds,
-        {
-          padding: [40, 40],
-          maxZoom: 13,
-        }
-      );
-    }
-
-    /* -------------------------------------------------------
-       CORREGIR TAMAÑO
-    ------------------------------------------------------- */
+  if (puntosValidos.length === 0) {
+    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
     const resizeTimer = window.setTimeout(() => {
       map.invalidateSize();
@@ -635,11 +497,48 @@ export default function EmergencyMap({
     return () => {
       window.clearTimeout(resizeTimer);
     };
-  }, [
-    catastrofes,
-    zonas,
-    centros,
-  ]);
+  }
+
+  const bounds = L.latLngBounds([]);
+
+  puntosValidos.forEach(({ punto, latitud, longitud }) => {
+    const marker = L.marker([latitud, longitud], {
+      icon: crearIcono(punto.tipo),
+      title: punto.titulo,
+    });
+
+    marker.bindPopup(crearPopup(punto), {
+      maxWidth: 360,
+      minWidth: 260,
+      closeButton: true,
+      autoPan: true,
+    });
+
+    marker.addTo(markersLayer);
+
+    bounds.extend([latitud, longitud]);
+  });
+
+  if (puntosValidos.length === 1) {
+    const punto = puntosValidos[0];
+
+    map.setView([punto.latitud, punto.longitud], 12);
+  } else {
+    map.fitBounds(bounds, {
+      padding: [40, 40],
+      maxZoom: 13,
+    });
+  }
+
+  const resizeTimer = window.setTimeout(() => {
+    map.invalidateSize();
+  }, 100);
+
+  return () => {
+    window.clearTimeout(resizeTimer);
+  };
+}, [mapReady, catastrofes, zonas, centros]);
+
 
   /* =======================================================
      CONTADOR
