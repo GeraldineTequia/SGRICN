@@ -136,7 +136,7 @@ export default function ConfiguracionPage() {
   ============================================ */
 
   return (
-    <DashboardLayout role="ADMIN">
+    <DashboardLayout>
       <div className="configuracion-page">
         {/* ======================================
             ENCABEZADO
