@@ -147,9 +147,6 @@ export async function GET() {
           0
       ) || 0;
 
-  return total + cantidad;
-}, 0);
-
       return total + cantidad;
     }, 0);
 
