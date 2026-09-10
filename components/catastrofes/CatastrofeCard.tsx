@@ -4,6 +4,7 @@ import { Catastrofe } from "@/types/catastrofes";
 
 interface CatastrofeCardProps {
   catastrofe: Catastrofe;
+  onView?: (catastrofe: Catastrofe) => void;
   onEdit?: (catastrofe: Catastrofe) => void;
   onDelete?: (catastrofe: Catastrofe) => void;
   onChangeStatus?: (catastrofe: Catastrofe) => void;
@@ -11,6 +12,7 @@ interface CatastrofeCardProps {
 
 export default function CatastrofeCard({
   catastrofe,
+  onView,
   onEdit,
   onDelete,
   onChangeStatus,
