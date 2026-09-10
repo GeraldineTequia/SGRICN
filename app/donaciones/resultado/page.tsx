@@ -119,7 +119,7 @@ export default function ResultadoDonacionPage() {
 
   if (loading) {
     return (
-      <DashboardLayout role="USUARIO">
+      <DashboardLayout>
         <div
           style={{
             padding: "50px",
@@ -134,7 +134,7 @@ export default function ResultadoDonacionPage() {
 
   if (error && !donacion) {
     return (
-      <DashboardLayout role="USUARIO">
+      <DashboardLayout>
         <div
           style={{
             background: "#fdecec",
@@ -163,7 +163,7 @@ export default function ResultadoDonacionPage() {
     donacion.estado === "aprobada" || donacion.estado === "rechazada";
 
   return (
-    <DashboardLayout role="USUARIO">
+    <DashboardLayout>
       <div
         style={{
           maxWidth: "850px",
