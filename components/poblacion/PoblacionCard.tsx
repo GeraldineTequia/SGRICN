@@ -154,25 +154,34 @@ export default function PoblacionCard({
         </div>
 
         {/* Afectaciones principales */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-            gap: "10px",
-            marginBottom: "18px",
-          }}
-        >
-          <Dato titulo="Familias" valor={numero(poblacion.familiasAfectadas)} />
+       <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+    gap: "10px",
+    marginBottom: "18px",
+  }}
+>
+  <Dato
+    titulo="Familias"
+    valor={numero(poblacion.familiasAfectadas)}
+  />
 
-          <Dato titulo="Heridos" valor={numero(poblacion.heridos)} />
+  <Dato
+    titulo="Heridos"
+    valor={numero(poblacion.personasHeridas)}
+  />
 
-          <Dato titulo="Fallecidos" valor={numero(poblacion.fallecidos)} />
+  <Dato
+    titulo="Fallecidos"
+    valor={numero(poblacion.personasFallecidas)}
+  />
 
-          <Dato
-            titulo="Desaparecidos"
-            valor={numero(poblacion.desaparecidos)}
-          />
-        </div>
+  <Dato
+    titulo="Desaparecidos"
+    valor={numero(poblacion.personasDesaparecidas)}
+  />
+</div>
 
         {/* Distribución poblacional */}
         <div
