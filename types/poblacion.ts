@@ -7,9 +7,9 @@ export interface PoblacionAfectada {
   familiasAfectadas: number;
   personasAfectadas: number;
 
-  heridos: number;
-  fallecidos: number;
-  desaparecidos: number;
+  personasHeridas: number;
+  personasFallecidas: number;
+  personasDesaparecidas: number;
 
   niños: number;
   adultos: number;
@@ -21,6 +21,6 @@ export interface PoblacionAfectada {
   personasAlbergadas: number;
   personasPendientesAtencion: number;
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
