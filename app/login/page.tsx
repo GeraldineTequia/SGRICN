@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 
 export default function LoginPage() {
-  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,8 +39,7 @@ export default function LoginPage() {
 
       // La API ya creó la cookie de sesión.
       // Ahora enviamos al usuario al dashboard.
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Error iniciando sesión:", error);
 
