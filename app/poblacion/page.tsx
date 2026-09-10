@@ -148,40 +148,40 @@ export default function PoblacionPage() {
   }, [poblaciones, catastrofes, zonas, busqueda, catastrofeFiltro]);
 
   const estadisticas = useMemo(() => {
-    return {
-      registros: poblaciones.length,
+  return {
+    registros: poblaciones.length,
 
-      personas: poblaciones.reduce(
-        (total, item) => total + (item.personasAfectadas ?? 0),
-        0
-      ),
+    personas: poblaciones.reduce(
+      (total, item) => total + (item.personasAfectadas ?? 0),
+      0
+    ),
 
-      familias: poblaciones.reduce(
-        (total, item) => total + (item.familiasAfectadas ?? 0),
-        0
-      ),
+    familias: poblaciones.reduce(
+      (total, item) => total + (item.familiasAfectadas ?? 0),
+      0
+    ),
 
-      heridos: poblaciones.reduce(
-        (total, item) => total + (item.heridos ?? 0),
-        0
-      ),
+    heridos: poblaciones.reduce(
+      (total, item) => total + (item.personasHeridas ?? 0),
+      0
+    ),
 
-      fallecidos: poblaciones.reduce(
-        (total, item) => total + (item.fallecidos ?? 0),
-        0
-      ),
+    fallecidos: poblaciones.reduce(
+      (total, item) => total + (item.personasFallecidas ?? 0),
+      0
+    ),
 
-      desaparecidos: poblaciones.reduce(
-        (total, item) => total + (item.desaparecidos ?? 0),
-        0
-      ),
+    desaparecidos: poblaciones.reduce(
+      (total, item) => total + (item.personasDesaparecidas ?? 0),
+      0
+    ),
 
-      pendientes: poblaciones.reduce(
-        (total, item) => total + (item.personasPendientesAtencion ?? 0),
-        0
-      ),
-    };
-  }, [poblaciones]);
+    pendientes: poblaciones.reduce(
+      (total, item) => total + (item.personasPendientesAtencion ?? 0),
+      0
+    ),
+  };
+}, [poblaciones]);
 
   function abrirCrear() {
     if (!puedeGestionar) {
