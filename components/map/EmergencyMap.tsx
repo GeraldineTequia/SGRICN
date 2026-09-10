@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import L from "leaflet";
+import type * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+let Leaflet: typeof import("leaflet") | null = null;
 
 export interface PuntoMapa {
   _id: string;
@@ -34,6 +36,10 @@ interface EmergencyMapProps {
 
 const DEFAULT_CENTER: L.LatLngExpression = [4.5709, -74.2973];
 const DEFAULT_ZOOM = 6;
+
+/* =========================================================
+   FUNCIONES AUXILIARES
+========================================================= */
 
 function escaparHtml(valor: string | undefined | null): string {
   if (!valor) {
@@ -68,7 +74,15 @@ function formatearNivel(nivel: string): string {
     .replace(/\b\w/g, (letra) => letra.toUpperCase());
 }
 
+/* =========================================================
+   ICONOS DEL MAPA
+========================================================= */
+
 function crearIcono(tipo: PuntoMapa["tipo"]): L.DivIcon {
+  if (!Leaflet) {
+    throw new Error("Leaflet todavía no está cargado.");
+  }
+
   const configuracion = {
     catastrofe: {
       emoji: "🚨",
@@ -76,12 +90,14 @@ function crearIcono(tipo: PuntoMapa["tipo"]): L.DivIcon {
       border: "#a50e20",
       label: "Catástrofe",
     },
+
     zona: {
       emoji: "📍",
       background: "#fcd116",
       border: "#c8a900",
       label: "Zona afectada",
     },
+
     centro: {
       emoji: "🏥",
       background: "#198754",
@@ -90,8 +106,9 @@ function crearIcono(tipo: PuntoMapa["tipo"]): L.DivIcon {
     },
   }[tipo];
 
-  return L.divIcon({
+  return Leaflet.divIcon({
     className: "sgricn-map-marker",
+
     html: `
       <div
         title="${escaparHtml(configuracion.label)}"
@@ -119,13 +136,20 @@ function crearIcono(tipo: PuntoMapa["tipo"]): L.DivIcon {
         </span>
       </div>
     `,
+
     iconSize: [38, 38],
     iconAnchor: [19, 38],
     popupAnchor: [0, -38],
   });
 }
 
-function formatearCoordenadas(coordinates: PuntoMapa["coordinates"]): string {
+/* =========================================================
+   COORDENADAS
+========================================================= */
+
+function formatearCoordenadas(
+  coordinates: PuntoMapa["coordinates"]
+): string {
   if (
     !Array.isArray(coordinates) ||
     coordinates.length < 2 ||
@@ -136,17 +160,22 @@ function formatearCoordenadas(coordinates: PuntoMapa["coordinates"]): string {
   }
 
   /*
-   * GeoJSON utiliza:
+   * GeoJSON:
    * [longitud, latitud]
    *
-   * Para mostrar al usuario:
+   * Para mostrar:
    * latitud, longitud
    */
+
   const longitud = Number(coordinates[0]);
   const latitud = Number(coordinates[1]);
 
   return `${latitud.toFixed(6)}, ${longitud.toFixed(6)}`;
 }
+
+/* =========================================================
+   POPUP
+========================================================= */
 
 function crearPopup(punto: PuntoMapa): string {
   const detalles: string[] = [];
@@ -227,13 +256,21 @@ function crearPopup(punto: PuntoMapa): string {
     detalles.push(`
       <div style="margin-bottom: 6px;">
         <strong>Donaciones:</strong>
-        ${punto.tipoDonacion.map((tipo) => escaparHtml(tipo)).join(", ")}
+        ${punto.tipoDonacion
+          .map((tipo) => escaparHtml(tipo))
+          .join(", ")}
       </div>
     `);
   }
 
   detalles.push(`
-    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+    <div
+      style="
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e5e7eb;
+      "
+    >
       <strong>Coordenadas:</strong>
       ${escaparHtml(formatearCoordenadas(punto.coordinates))}
     </div>
@@ -248,6 +285,7 @@ function crearPopup(punto: PuntoMapa): string {
         color: #344054;
       "
     >
+
       <div
         style="
           margin-bottom: 10px;
@@ -255,6 +293,7 @@ function crearPopup(punto: PuntoMapa): string {
           border-bottom: 2px solid #003893;
         "
       >
+
         <div
           style="
             color: #00245f;
@@ -280,6 +319,7 @@ function crearPopup(punto: PuntoMapa): string {
             `
             : ""
         }
+
       </div>
 
       ${
@@ -298,21 +338,36 @@ function crearPopup(punto: PuntoMapa): string {
           : ""
       }
 
-      <div style="font-size: 12px; line-height: 1.45;">
+      <div
+        style="
+          font-size: 12px;
+          line-height: 1.45;
+        "
+      >
         ${detalles.join("")}
       </div>
+
     </div>
   `;
 }
 
-function obtenerPuntosValidos(puntos: PuntoMapa[]): Array<{
+/* =========================================================
+   VALIDACIÓN DE PUNTOS
+========================================================= */
+
+function obtenerPuntosValidos(
+  puntos: PuntoMapa[]
+): Array<{
   punto: PuntoMapa;
   latitud: number;
   longitud: number;
 }> {
   return puntos
     .map((punto) => {
-      if (!Array.isArray(punto.coordinates) || punto.coordinates.length < 2) {
+      if (
+        !Array.isArray(punto.coordinates) ||
+        punto.coordinates.length < 2
+      ) {
         return null;
       }
 
@@ -348,6 +403,10 @@ function obtenerPuntosValidos(puntos: PuntoMapa[]): Array<{
     );
 }
 
+/* =========================================================
+   COMPONENTE PRINCIPAL
+========================================================= */
+
 export default function EmergencyMap({
   catastrofes = [],
   zonas = [],
@@ -355,107 +414,219 @@ export default function EmergencyMap({
   height = "650px",
 }: EmergencyMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+
   const mapRef = useRef<L.Map | null>(null);
+
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
+  /* =======================================================
+     INICIALIZAR LEAFLET
+  ======================================================= */
+
   useEffect(() => {
-    if (!mapContainerRef.current) {
-      return;
+    let cancelado = false;
+
+    async function inicializarMapa() {
+      if (!mapContainerRef.current || mapRef.current) {
+        return;
+      }
+
+      try {
+        /*
+         * IMPORTANTE:
+         * Leaflet se carga solamente en el navegador.
+         * Esto evita el error de Vercel/Next.js durante el build.
+         */
+
+        const moduloLeaflet = await import("leaflet");
+
+        if (
+          cancelado ||
+          !mapContainerRef.current ||
+          mapRef.current
+        ) {
+          return;
+        }
+
+        Leaflet = moduloLeaflet;
+
+        const map = Leaflet.map(mapContainerRef.current, {
+          center: DEFAULT_CENTER,
+          zoom: DEFAULT_ZOOM,
+          zoomControl: true,
+          scrollWheelZoom: true,
+        });
+
+        mapRef.current = map;
+
+        Leaflet.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+            maxZoom: 19,
+          }
+        ).addTo(map);
+
+        markersLayerRef.current =
+          Leaflet.layerGroup().addTo(map);
+
+        const resizeTimer = window.setTimeout(() => {
+          map.invalidateSize();
+        }, 150);
+
+        /*
+         * Limpieza cuando el componente se desmonta.
+         */
+
+        if (cancelado) {
+          window.clearTimeout(resizeTimer);
+
+          markersLayerRef.current?.clearLayers();
+          markersLayerRef.current = null;
+
+          map.remove();
+          mapRef.current = null;
+
+          return;
+        }
+      } catch (error) {
+        console.error(
+          "Error al inicializar el mapa de Leaflet:",
+          error
+        );
+      }
     }
 
-    /*
-     * Evitamos crear el mapa dos veces sobre el mismo contenedor.
-     */
-    if (mapRef.current) {
-      return;
-    }
-
-    const map = L.map(mapContainerRef.current, {
-      center: DEFAULT_CENTER,
-      zoom: DEFAULT_ZOOM,
-      zoomControl: true,
-      scrollWheelZoom: true,
-    });
-
-    mapRef.current = map;
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
-
-    markersLayerRef.current = L.layerGroup().addTo(map);
-
-    const resizeTimer = window.setTimeout(() => {
-      map.invalidateSize();
-    }, 150);
+    inicializarMapa();
 
     return () => {
-      window.clearTimeout(resizeTimer);
+      cancelado = true;
 
-      markersLayerRef.current?.clearLayers();
-      markersLayerRef.current = null;
+      if (mapRef.current) {
+        markersLayerRef.current?.clearLayers();
+        markersLayerRef.current = null;
 
-      map.remove();
-      mapRef.current = null;
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+
+      Leaflet = null;
     };
   }, []);
 
+  /* =======================================================
+     ACTUALIZAR MARCADORES
+  ======================================================= */
+
   useEffect(() => {
     const map = mapRef.current;
+
     const markersLayer = markersLayerRef.current;
 
-    if (!map || !markersLayer) {
+    if (!map || !markersLayer || !Leaflet) {
       return;
     }
 
     markersLayer.clearLayers();
 
-    const puntos = [...catastrofes, ...zonas, ...centros];
+    const puntos = [
+      ...catastrofes,
+      ...zonas,
+      ...centros,
+    ];
 
     const puntosValidos = obtenerPuntosValidos(puntos);
 
-    if (puntosValidos.length === 0) {
-      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    /* -------------------------------------------------------
+       SIN PUNTOS
+    ------------------------------------------------------- */
 
-      window.setTimeout(() => {
+    if (puntosValidos.length === 0) {
+      map.setView(
+        DEFAULT_CENTER,
+        DEFAULT_ZOOM
+      );
+
+      const emptyTimer = window.setTimeout(() => {
         map.invalidateSize();
       }, 100);
 
-      return;
+      return () => {
+        window.clearTimeout(emptyTimer);
+      };
     }
 
-    const bounds = L.latLngBounds([]);
+    /* -------------------------------------------------------
+       CREAR BOUNDS
+    ------------------------------------------------------- */
 
-    puntosValidos.forEach(({ punto, latitud, longitud }) => {
-      const marker = L.marker([latitud, longitud], {
-        icon: crearIcono(punto.tipo),
-        title: punto.titulo,
-      });
+    const bounds = Leaflet.latLngBounds([]);
 
-      marker.bindPopup(crearPopup(punto), {
-        maxWidth: 360,
-        minWidth: 260,
-        closeButton: true,
-        autoPan: true,
-      });
+    /* -------------------------------------------------------
+       CREAR MARCADORES
+    ------------------------------------------------------- */
 
-      marker.addTo(markersLayer);
+    puntosValidos.forEach(
+      ({ punto, latitud, longitud }) => {
+        if (!Leaflet) {
+          return;
+        }
 
-      bounds.extend([latitud, longitud]);
-    });
+        const marker = Leaflet.marker(
+          [latitud, longitud],
+          {
+            icon: crearIcono(punto.tipo),
+            title: punto.titulo,
+          }
+        );
+
+        marker.bindPopup(
+          crearPopup(punto),
+          {
+            maxWidth: 360,
+            minWidth: 260,
+            closeButton: true,
+            autoPan: true,
+          }
+        );
+
+        marker.addTo(markersLayer);
+
+        bounds.extend([
+          latitud,
+          longitud,
+        ]);
+      }
+    );
+
+    /* -------------------------------------------------------
+       AJUSTAR VISTA
+    ------------------------------------------------------- */
 
     if (puntosValidos.length === 1) {
       const punto = puntosValidos[0];
 
-      map.setView([punto.latitud, punto.longitud], 12);
+      map.setView(
+        [
+          punto.latitud,
+          punto.longitud,
+        ],
+        12
+      );
     } else {
-      map.fitBounds(bounds, {
-        padding: [40, 40],
-        maxZoom: 13,
-      });
+      map.fitBounds(
+        bounds,
+        {
+          padding: [40, 40],
+          maxZoom: 13,
+        }
+      );
     }
+
+    /* -------------------------------------------------------
+       CORREGIR TAMAÑO
+    ------------------------------------------------------- */
 
     const resizeTimer = window.setTimeout(() => {
       map.invalidateSize();
@@ -464,9 +635,24 @@ export default function EmergencyMap({
     return () => {
       window.clearTimeout(resizeTimer);
     };
-  }, [catastrofes, zonas, centros]);
+  }, [
+    catastrofes,
+    zonas,
+    centros,
+  ]);
 
-  const totalPuntos = catastrofes.length + zonas.length + centros.length;
+  /* =======================================================
+     CONTADOR
+  ======================================================= */
+
+  const totalPuntos =
+    catastrofes.length +
+    zonas.length +
+    centros.length;
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
 
   return (
     <div
@@ -479,6 +665,11 @@ export default function EmergencyMap({
         borderRadius: "10px",
       }}
     >
+
+      {/* ===================================================
+          MAPA
+      =================================================== */}
+
       <div
         ref={mapContainerRef}
         style={{
@@ -488,22 +679,34 @@ export default function EmergencyMap({
         }}
       />
 
-      {/* Leyenda */}
+      {/* ===================================================
+          LEYENDA
+      =================================================== */}
+
       <div
         style={{
           position: "absolute",
           zIndex: 1000,
           top: "14px",
           right: "14px",
+
           background: "#ffffff",
+
           borderRadius: "10px",
+
           padding: "12px 14px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.18)",
+
+          boxShadow:
+            "0 2px 10px rgba(0,0,0,0.18)",
+
           fontFamily: "Arial, sans-serif",
+
           fontSize: "12px",
+
           minWidth: "175px",
         }}
       >
+
         <div
           style={{
             color: "#00245f",
@@ -523,8 +726,13 @@ export default function EmergencyMap({
             marginBottom: "7px",
           }}
         >
-          <span style={{ fontSize: "15px" }}>🚨</span>
-          <span>Catástrofe</span>
+          <span style={{ fontSize: "15px" }}>
+            🚨
+          </span>
+
+          <span>
+            Catástrofe
+          </span>
         </div>
 
         <div
@@ -535,8 +743,13 @@ export default function EmergencyMap({
             marginBottom: "7px",
           }}
         >
-          <span style={{ fontSize: "15px" }}>📍</span>
-          <span>Zona afectada</span>
+          <span style={{ fontSize: "15px" }}>
+            📍
+          </span>
+
+          <span>
+            Zona afectada
+          </span>
         </div>
 
         <div
@@ -546,54 +759,96 @@ export default function EmergencyMap({
             gap: "8px",
           }}
         >
-          <span style={{ fontSize: "15px" }}>🏥</span>
-          <span>Centro de donación</span>
+          <span style={{ fontSize: "15px" }}>
+            🏥
+          </span>
+
+          <span>
+            Centro de donación
+          </span>
         </div>
+
       </div>
 
-      {/* Contador de puntos */}
+      {/* ===================================================
+          CONTADOR DE PUNTOS
+      =================================================== */}
+
       <div
         style={{
           position: "absolute",
           zIndex: 1000,
+
           left: "14px",
           bottom: "14px",
+
           background: "#ffffff",
+
           borderRadius: "8px",
+
           padding: "8px 12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+
+          boxShadow:
+            "0 2px 8px rgba(0,0,0,0.18)",
+
           color: "#00245f",
+
           fontFamily: "Arial, sans-serif",
+
           fontSize: "12px",
+
           fontWeight: 700,
         }}
       >
         {totalPuntos === 0
           ? "Sin puntos geográficos"
-          : `${totalPuntos} punto${totalPuntos === 1 ? "" : "s"} geográfico${
-              totalPuntos === 1 ? "" : "s"
+          : `${totalPuntos} punto${
+              totalPuntos === 1
+                ? ""
+                : "s"
+            } geográfico${
+              totalPuntos === 1
+                ? ""
+                : "s"
             }`}
       </div>
 
-      {/* Estado vacío */}
+      {/* ===================================================
+          ESTADO VACÍO
+      =================================================== */}
+
       {totalPuntos === 0 && (
         <div
           style={{
             position: "absolute",
             zIndex: 900,
+
             top: "50%",
             left: "50%",
-            transform: "translate(-50%, -50%)",
-            background: "rgba(255,255,255,0.94)",
+
+            transform:
+              "translate(-50%, -50%)",
+
+            background:
+              "rgba(255,255,255,0.94)",
+
             borderRadius: "12px",
+
             padding: "18px 22px",
-            boxShadow: "0 3px 15px rgba(0,0,0,0.18)",
+
+            boxShadow:
+              "0 3px 15px rgba(0,0,0,0.18)",
+
             textAlign: "center",
+
             fontFamily: "Arial, sans-serif",
+
             color: "#5f6b7a",
+
             pointerEvents: "none",
           }}
         >
+
           <div
             style={{
               fontSize: "30px",
@@ -618,10 +873,13 @@ export default function EmergencyMap({
               fontSize: "12px",
             }}
           >
-            Cuando existan registros geográficos, aparecerán aquí.
+            Cuando existan registros
+            geográficos, aparecerán aquí.
           </div>
+
         </div>
       )}
+
     </div>
   );
 }
