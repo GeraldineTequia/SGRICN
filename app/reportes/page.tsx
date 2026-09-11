@@ -1760,7 +1760,6 @@ export default function ReportesPage() {
                                    <span>
                                       {necesidad.categoria}
                                     </span>
-                                  )}
                                 </div>
                               </td>
 
