@@ -57,18 +57,10 @@ function esEmergenciaActiva(estado: unknown): boolean {
 
 function esNecesidadCritica(necesidad: {
   prioridad?: unknown;
-  nivelPrioridad?: unknown;
-  urgencia?: unknown;
   estado?: unknown;
 }): boolean {
-  const prioridad = normalizarTexto(
-    necesidad.prioridad ?? necesidad.nivelPrioridad ?? necesidad.urgencia
-  );
-
+  const prioridad = normalizarTexto(necesidad.prioridad);
   const estado = normalizarTexto(necesidad.estado);
-
-  const prioridadCritica =
-    prioridad === "critica" || prioridad === "alta" || prioridad === "urgente";
 
   const atendida =
     estado === "atendida" ||
@@ -78,7 +70,7 @@ function esNecesidadCritica(necesidad: {
     estado === "cerrada" ||
     estado === "cerrado";
 
-  return prioridadCritica && !atendida;
+  return prioridad === "critica" && !atendida;
 }
 
 export async function GET() {
@@ -151,13 +143,11 @@ export async function GET() {
     }, 0);
 
     const necesidadesCriticas = necesidades.filter((necesidad) =>
-      esNecesidadCritica({
-        prioridad: necesidad.prioridad,
-        nivelPrioridad: necesidad.nivelPrioridad,
-        urgencia: necesidad.urgencia,
-        estado: necesidad.estado,
-      })
-    ).length;
+  esNecesidadCritica({
+    prioridad: necesidad.prioridad,
+    estado: necesidad.estado,
+  })
+).length;
 
     const funcionariosActivos = esPersonalInstitucional
       ? usuarios.filter((usuario) => {
