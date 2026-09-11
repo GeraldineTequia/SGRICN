@@ -6,7 +6,7 @@ import autoTable from "jspdf-autotable";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
+import ReporteFilters from "@/components/reportes/ReporteFilters";
 import ReporteStatCard from "@/components/reportes/ReporteStatCard";
 import ReporteModal from "@/components/reportes/ReporteModal";
 
