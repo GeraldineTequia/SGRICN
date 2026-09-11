@@ -2013,6 +2013,12 @@ export default function ReportesPage() {
           tipoReporte={tipoReporte}
           onCerrar={cerrarModal}
         />
+        <ReporteFilters
+  tipoReporte={tipoReporte}
+  busqueda={busqueda}
+  onTipoReporteChange={setTipoReporte}
+  onBusquedaChange={setBusqueda}
+/>
       </div>
     </DashboardLayout>
   );
