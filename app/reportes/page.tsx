@@ -6,7 +6,6 @@ import autoTable from "jspdf-autotable";
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import ReporteFilters from "@/components/reportes/ReporteFilters";
 import ReporteStatCard from "@/components/reportes/ReporteStatCard";
 import ReporteModal from "@/components/reportes/ReporteModal";
 
@@ -2013,12 +2012,7 @@ export default function ReportesPage() {
           tipoReporte={tipoReporte}
           onCerrar={cerrarModal}
         />
-        <ReporteFilters
-  tipoReporte={tipoReporte}
-  busqueda={busqueda}
-  onTipoReporteChange={setTipoReporte}
-  onBusquedaChange={setBusqueda}
-/>
+        
       </div>
     </DashboardLayout>
   );
