@@ -7670,7 +7670,694 @@ a {
     width: 100%;
   }
 }
+/* =========================================================
+   SGRICN - MODAL DE DETALLES DE REPORTES
+   ========================================================= */
 
+.reporte-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(0, 24, 63, 0.68);
+  backdrop-filter: blur(4px);
+
+  animation: reporte-overlay-in 0.2s ease-out;
+}
+
+.reporte-modal {
+  width: min(860px, 100%);
+  max-height: calc(100vh - 48px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #ffffff;
+  border-radius: 16px;
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.30),
+    0 8px 25px rgba(0, 56, 147, 0.12);
+
+  animation: reporte-modal-in 0.25s ease-out;
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.reporte-modal-header {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 22px 26px;
+
+  background: linear-gradient(
+    135deg,
+    #003893 0%,
+    #0056b3 100%
+  );
+
+  color: #ffffff;
+}
+
+.reporte-modal-eyebrow {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.reporte-modal-header h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.reporte-modal-close {
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+
+  font-size: 25px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.reporte-modal-close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.45);
+
+  transform: rotate(90deg);
+}
+
+/* =========================================================
+   CUERPO
+   ========================================================= */
+
+.reporte-modal-body {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 24px 26px 28px;
+
+  background: #f5f7fa;
+}
+
+/* Scroll */
+
+.reporte-modal-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.reporte-modal-body::-webkit-scrollbar-track {
+  background: #edf1f5;
+}
+
+.reporte-modal-body::-webkit-scrollbar-thumb {
+  background: #b9c4d0;
+  border-radius: 10px;
+}
+
+.reporte-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #8f9baa;
+}
+
+/* =========================================================
+   RESUMEN
+   ========================================================= */
+
+.reporte-modal-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  margin-bottom: 22px;
+  padding: 20px;
+
+  border: 1px solid #dce4ed;
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+.reporte-modal-summary-icon {
+  flex-shrink: 0;
+
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: #eef3fb;
+
+  font-size: 28px;
+}
+
+.reporte-modal-summary-label {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #003893;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.reporte-modal-summary h3 {
+  margin: 0;
+
+  color: #172033;
+
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.reporte-modal-summary p {
+  margin: 5px 0 0;
+
+  color: #687586;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   SECCIONES
+   ========================================================= */
+
+.reporte-modal-section {
+  margin-bottom: 18px;
+
+  padding: 18px;
+
+  border: 1px solid #e0e6ed;
+  border-radius: 12px;
+
+  background: #ffffff;
+}
+
+.reporte-modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.reporte-modal-section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-bottom: 15px;
+  padding-bottom: 11px;
+
+  border-bottom: 1px solid #e7ebf0;
+
+  color: #26364a;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reporte-modal-section-title span {
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 7px;
+
+  background: #eef3fb;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   CAMPOS
+   ========================================================= */
+
+.reporte-modal-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 11px;
+}
+
+.reporte-modal-field {
+  min-width: 0;
+
+  padding: 13px 14px;
+
+  border: 1px solid #e2e7ed;
+  border-radius: 9px;
+
+  background: #f8fafc;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.reporte-modal-field:hover {
+  border-color: #cbd6e2;
+  background: #f5f8fb;
+}
+
+.reporte-modal-field > span:first-child {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #778496;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.reporte-modal-field strong {
+  display: block;
+
+  color: #1d2939;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  word-break: break-word;
+}
+
+/* =========================================================
+   ESTADOS Y PRIORIDADES
+   ========================================================= */
+
+.reporte-modal-status {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  width: fit-content;
+
+  padding: 5px 10px;
+
+  border-radius: 999px;
+
+  font-size: 11px !important;
+  font-weight: 800 !important;
+
+  line-height: 1.2 !important;
+}
+
+.reporte-modal-status-success {
+  background: #e8f7ee;
+  color: #137a3d !important;
+}
+
+.reporte-modal-status-danger {
+  background: #fdebed;
+  color: #b42333 !important;
+}
+
+.reporte-modal-status-warning {
+  background: #fff4df;
+  color: #a15c00 !important;
+}
+
+.reporte-modal-status-info {
+  background: #e7f0ff;
+  color: #075bb5 !important;
+}
+
+.reporte-modal-status-neutral {
+  background: #edf0f3;
+  color: #596574 !important;
+}
+
+/* =========================================================
+   MÉTRICAS
+   ========================================================= */
+
+.reporte-modal-metrics {
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.reporte-modal-metrics-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.reporte-modal-metric {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 105px;
+
+  padding: 14px 10px;
+
+  border: 1px solid #e0e6ed;
+  border-radius: 10px;
+
+  background: #f8fafc;
+
+  text-align: center;
+}
+
+.reporte-modal-metric > span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 19px;
+}
+
+.reporte-modal-metric strong {
+  display: block;
+
+  color: #003893;
+
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.reporte-modal-metric small {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #718096;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* =========================================================
+   BARRA DE PROGRESO
+   ========================================================= */
+
+.reporte-modal-progress {
+  padding: 14px;
+
+  border-radius: 9px;
+
+  background: #f8fafc;
+  border: 1px solid #e2e7ed;
+}
+
+.reporte-modal-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  margin-bottom: 9px;
+
+  color: #526071;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reporte-modal-progress-header strong {
+  color: #003893;
+
+  font-size: 14px;
+}
+
+.reporte-modal-progress-track {
+  width: 100%;
+  height: 9px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #dfe5ec;
+}
+
+.reporte-modal-progress-bar {
+  height: 100%;
+
+  min-width: 0;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #003893 0%,
+    #198754 100%
+  );
+
+  transition: width 0.4s ease;
+}
+
+/* =========================================================
+   PIE DEL MODAL
+   ========================================================= */
+
+.reporte-modal-footer {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  padding: 16px 26px;
+
+  border-top: 1px solid #e2e7ed;
+
+  background: #ffffff;
+}
+
+.reporte-modal-button {
+  min-height: 40px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 0 17px;
+
+  border-radius: 8px;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.reporte-modal-button:hover {
+  transform: translateY(-1px);
+}
+
+.reporte-modal-button-secondary {
+  border: 1px solid #d2d9e2;
+
+  background: #ffffff;
+  color: #465466;
+}
+
+.reporte-modal-button-secondary:hover {
+  background: #f4f6f8;
+}
+
+.reporte-modal-button-pdf {
+  border: 1px solid #003893;
+
+  background: #003893;
+  color: #ffffff;
+
+  box-shadow: 0 4px 10px rgba(0, 56, 147, 0.18);
+}
+
+.reporte-modal-button-pdf:hover {
+  background: #002f7d;
+
+  box-shadow: 0 6px 15px rgba(0, 56, 147, 0.25);
+}
+
+/* =========================================================
+   ANIMACIONES
+   ========================================================= */
+
+@keyframes reporte-overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes reporte-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .reporte-modal-overlay {
+    align-items: flex-end;
+
+    padding: 0;
+  }
+
+  .reporte-modal {
+    width: 100%;
+    max-height: 94vh;
+
+    border-radius: 18px 18px 0 0;
+  }
+
+  .reporte-modal-header {
+    padding: 18px 20px;
+  }
+
+  .reporte-modal-header h2 {
+    font-size: 19px;
+  }
+
+  .reporte-modal-body {
+    padding: 18px 18px 22px;
+  }
+
+  .reporte-modal-summary {
+    padding: 16px;
+  }
+
+  .reporte-modal-summary-icon {
+    width: 50px;
+    height: 50px;
+
+    font-size: 24px;
+  }
+
+  .reporte-modal-summary h3 {
+    font-size: 17px;
+  }
+
+  .reporte-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reporte-modal-metrics,
+  .reporte-modal-metrics-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reporte-modal-footer {
+    padding: 14px 18px;
+
+    flex-wrap: wrap;
+  }
+
+  .reporte-modal-button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 420px) {
+  .reporte-modal-summary {
+    align-items: flex-start;
+  }
+
+  .reporte-modal-section {
+    padding: 14px;
+  }
+
+  .reporte-modal-metrics,
+  .reporte-modal-metrics-four {
+    grid-template-columns: 1fr;
+  }
+
+  .reporte-modal-footer {
+    flex-direction: column;
+  }
+
+  .reporte-modal-button {
+    width: 100%;
+  }
+}
 /* =========================================================
    RESPONSIVE · CELULAR PEQUEÑO
    ========================================================= */
