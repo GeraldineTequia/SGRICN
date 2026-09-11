@@ -374,7 +374,6 @@ export default function ReportesPage() {
           necesidad.categoria,
           necesidad.prioridad,
           necesidad.estado,
-          necesidad.descripcion,
         ].some((valor) =>
           normalizarTexto(valor).includes(texto)
         );
@@ -1758,11 +1757,8 @@ export default function ReportesPage() {
                                     }
                                   </strong>
 
-                                  {necesidad.descripcion && (
-                                    <span>
-                                      {
-                                        necesidad.descripcion
-                                      }
+                                   <span>
+                                      {necesidad.categoria}
                                     </span>
                                   )}
                                 </div>
