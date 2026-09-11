@@ -55,6 +55,14 @@ function esEmergenciaActiva(estado: unknown): boolean {
   );
 }
 
+/**
+ * Determina si una necesidad debe aparecer
+ * como necesidad crítica en el dashboard.
+ *
+ * Se considera crítica únicamente cuando:
+ * - prioridad = "critica"
+ * - y todavía no está atendida, resuelta o cerrada.
+ */
 function esNecesidadCritica(necesidad: {
   prioridad?: unknown;
   estado?: unknown;
@@ -123,31 +131,51 @@ export async function GET() {
     // 4. ESTADÍSTICAS
     // =========================================================
 
+    // ---------------------------------------------------------
+    // 4.1 EMERGENCIAS ACTIVAS
+    // ---------------------------------------------------------
+
     const emergenciasActivas = catastrofes.filter((catastrofe) =>
       esEmergenciaActiva(catastrofe.estado)
     ).length;
 
+    // ---------------------------------------------------------
+    // 4.2 ZONAS AFECTADAS
+    // ---------------------------------------------------------
+
     const zonasAfectadas = zonas.length;
 
+    // ---------------------------------------------------------
+    // 4.3 POBLACIÓN AFECTADA
+    // ---------------------------------------------------------
+
     const poblacionAfectada = poblacion.reduce((total, registro) => {
-    const cantidad =
-      Number(
-        registro.personasAfectadas ??
-          registro.cantidadPersonas ??
-          registro.numeroPersonas ??
-          registro.personas ??
-          0
-      ) || 0;
+      const cantidad =
+        Number(
+          registro.personasAfectadas ??
+            registro.cantidadPersonas ??
+            registro.numeroPersonas ??
+            registro.personas ??
+            0
+        ) || 0;
 
       return total + cantidad;
     }, 0);
 
+    // ---------------------------------------------------------
+    // 4.4 NECESIDADES CRÍTICAS
+    // ---------------------------------------------------------
+
     const necesidadesCriticas = necesidades.filter((necesidad) =>
-  esNecesidadCritica({
-    prioridad: necesidad.prioridad,
-    estado: necesidad.estado,
-  })
-).length;
+      esNecesidadCritica({
+        prioridad: necesidad.prioridad,
+        estado: necesidad.estado,
+      })
+    ).length;
+
+    // ---------------------------------------------------------
+    // 4.5 FUNCIONARIOS ACTIVOS
+    // ---------------------------------------------------------
 
     const funcionariosActivos = esPersonalInstitucional
       ? usuarios.filter((usuario) => {
@@ -172,13 +200,19 @@ export async function GET() {
     // ---------------------------------------------------------
 
     const catastrofesActivas = catastrofes
-      .filter((catastrofe) => esEmergenciaActiva(catastrofe.estado))
+      .filter((catastrofe) =>
+        esEmergenciaActiva(catastrofe.estado)
+      )
       .sort((a, b) => {
         const fechaA =
-          convertirFecha(a.fechaInicio ?? a.createdAt)?.getTime() ?? 0;
+          convertirFecha(
+            a.fechaInicio ?? a.createdAt
+          )?.getTime() ?? 0;
 
         const fechaB =
-          convertirFecha(b.fechaInicio ?? b.createdAt)?.getTime() ?? 0;
+          convertirFecha(
+            b.fechaInicio ?? b.createdAt
+          )?.getTime() ?? 0;
 
         return fechaB - fechaA;
       })
@@ -186,12 +220,18 @@ export async function GET() {
 
     for (const catastrofe of catastrofesActivas) {
       const titulo = String(
-        catastrofe.titulo ?? catastrofe.tipo ?? "Emergencia activa"
+        catastrofe.titulo ??
+          catastrofe.tipo ??
+          "Emergencia activa"
       );
 
-      const municipio = String(catastrofe.municipio ?? "").trim();
+      const municipio = String(
+        catastrofe.municipio ?? ""
+      ).trim();
 
-      const departamento = String(catastrofe.departamento ?? "").trim();
+      const departamento = String(
+        catastrofe.departamento ?? ""
+      ).trim();
 
       let ubicacion = "";
 
@@ -210,7 +250,10 @@ export async function GET() {
           ? `Se registra una emergencia activa en ${ubicacion}.`
           : "Se registra una emergencia activa en el sistema.",
 
-        fecha: formatearFecha(catastrofe.fechaInicio ?? catastrofe.createdAt),
+        fecha: formatearFecha(
+          catastrofe.fechaInicio ??
+            catastrofe.createdAt
+        ),
       });
     }
 
@@ -222,8 +265,6 @@ export async function GET() {
       .filter((necesidad) =>
         esNecesidadCritica({
           prioridad: necesidad.prioridad,
-          nivelPrioridad: necesidad.nivelPrioridad,
-          urgencia: necesidad.urgencia,
           estado: necesidad.estado,
         })
       )
@@ -245,7 +286,9 @@ export async function GET() {
         descripcion,
 
         fecha: formatearFecha(
-          necesidad.fechaRegistro ?? necesidad.createdAt ?? necesidad.fecha
+          necesidad.fechaRegistro ??
+            necesidad.createdAt ??
+            necesidad.fecha
         ),
       });
     }
@@ -261,26 +304,31 @@ export async function GET() {
     // =========================================================
 
     return NextResponse.json({
-    success: true,
-    data: {
-      stats: {
-        emergenciasActivas,
-        zonasAfectadas,
-        poblacionAfectada,
-        necesidadesCriticas,
-        funcionariosActivos,
+      success: true,
+
+      data: {
+        stats: {
+          emergenciasActivas,
+          zonasAfectadas,
+          poblacionAfectada,
+          necesidadesCriticas,
+          funcionariosActivos,
+        },
+
+        alertas: alertasFinales,
       },
-  
-      alertas: alertasFinales,
-    },
-  });
+    });
   } catch (error) {
-    console.error("Error en GET /api/dashboard:", error);
+    console.error(
+      "Error en GET /api/dashboard:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        message: "Error interno al cargar la información del dashboard.",
+        message:
+          "Error interno al cargar la información del dashboard.",
       },
       {
         status: 500,
