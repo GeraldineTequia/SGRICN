@@ -9,6 +9,8 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.2",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.10",
     "leaflet": "^1.9.4",
